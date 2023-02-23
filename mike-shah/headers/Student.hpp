@@ -12,9 +12,10 @@ class Student
 
     public:
         // Constructor
+        Student();
         Student(string name);
 
-        // Destructor
+        // Destructor  - If you omit it you get an default
         ~Student();
 
         string get_name();

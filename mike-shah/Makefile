@@ -1,5 +1,7 @@
 FLAGS=-std=c++20 -Ofast
 
+all: student main
+
 student:
 	g++ -c ${FLAGS} src/Student.cpp -o bin/Student.o
 

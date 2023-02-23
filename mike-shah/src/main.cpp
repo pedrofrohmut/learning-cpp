@@ -16,6 +16,9 @@ int main()
     std::unique_ptr<Student> daiane(new Student("Daiane dos Santos"));
     daiane->print_name();
 
+    // Student with smart pointer and empty constructor
+    std::unique_ptr<Student> unknown(new Student());
+
     // Clean Up: First manual (camila), Second unique_ptr (daiane)
     // and last auto on the stack (pedro)
     delete camila;
