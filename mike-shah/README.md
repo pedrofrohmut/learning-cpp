@@ -37,3 +37,18 @@ compiler error if someone tries to.
 
 - Passing by reference is better for perfomance reasons and should be used where
 it can make a difference.
+
+## Classes 6 - Operator Overloading
+
+- You can override the behavior of an operator when it interacts with instances
+of your class.
+
+- Exp of the sum operator '+' you can sum two vectors vec1{1, 2, 3} + vec2{2, 5, 6}
+=> 'result = vec1 + vec2;' you can simplify your code this way.
+
+- Or a the increment operator '++' => ++vec1;
+
+- The operator '<<' you can ease the way to print => 'std:cout << vec1 << '\n';
+
+- The operator '==' you can compare all the fields of two vectors in a simgle operation
+in your code => 'are_equal = (vec1 == vec2);'
