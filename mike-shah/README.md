@@ -52,3 +52,12 @@ of your class.
 
 - The operator '==' you can compare all the fields of two vectors in a simgle operation
 in your code => 'are_equal = (vec1 == vec2);'
+
+## Classes 7 - Member Initializer List
+
+- You can simplify your constructor with this syntax but you need to respect the
+order that they are declared in the class.
+    Exp: float x, y, z; => Vec3f() : x(x), y(y), z(z) {}
+
+- This technique is an implementation syntatic sugar and should not be in the
+header files.
