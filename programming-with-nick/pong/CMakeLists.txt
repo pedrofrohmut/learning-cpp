@@ -18,7 +18,15 @@ find_package(raylib REQUIRED)
 
 set(SOURCES src/main.cpp)
 
+# Set compiler flags for debug version
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g -Wall -Wextra -Werror -Og")
+
 add_executable(${PROJECT_NAME} ${SOURCES})
 
 target_include_directories(${PROJECT_NAME} PRIVATE ${raylib_INCLUDE_DIRS})
+
+# Link Raylib library to the executable
 target_link_libraries(${PROJECT_NAME} PRIVATE ${raylib_LIBRARIES})
+
+# Additional linker flags
+target_link_libraries(${PROJECT_NAME} PRIVATE -lglfw -lm -ldl -lpthread)

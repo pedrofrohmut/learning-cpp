@@ -1,23 +1,62 @@
 #include <raylib.h>
+#include <iostream>
+
+// Video: https://www.youtube.com/watch?v=VLJlTaFvHo4
+
+class Ball
+{
+public:
+    float x, y;
+    float speed_x, speed_y;
+    float radius;
+
+    void draw() {
+        DrawCircle(x, y, radius, ORANGE);
+    }
+
+    void update() {
+        x += speed_x;
+        y += speed_y;
+    }
+};
 
 int main() {
     // Initialization
-    const int screenWidth = 800;
-    const int screenHeight = 450;
+    const int width = 1280;
+    const int height = 800;
 
-    InitWindow(screenWidth, screenHeight, "Hello, World! - Raylib Example");
-
+    InitWindow(width, height, "Pong");
     SetTargetFPS(60);
+
+    Ball ball;
+    ball.radius = 20;
+    ball.x = (float) width / 2;
+    ball.y = (float) height / 2;
+    ball.speed_x = 3;
+    ball.speed_y = 0;
 
     while (!WindowShouldClose()) {
         // Update
-        // TODO: Update your game logic here
+        if (IsKeyDown(KEY_LEFT_CONTROL) && IsKeyPressed(KEY_Q)) {
+            std::cout << "CTRL-Q" << std::endl;
+            break;
+        }
+
+        ball.update();
 
         // Draw
         BeginDrawing();
-        ClearBackground(RAYWHITE);
+        ClearBackground(DARKBLUE);
 
-        DrawText("Hello, World!", screenWidth / 2 - MeasureText("Hello, World!", 20) / 2, screenHeight / 2 - 10, 20, LIGHTGRAY);
+        ball.draw();
+
+        DrawRectangle(35, height/2 - 60, 25, 120, ORANGE);
+
+        DrawRectangle(width - 60, height/2 - 60, 25, 120, ORANGE);
+
+        DrawLine(width/2, 0, width/2, height, ORANGE);
+
+        DrawLine(0, height/2, width, height/2, ORANGE);
 
         EndDrawing();
     }
