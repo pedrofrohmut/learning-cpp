@@ -18,18 +18,18 @@ public:
 
     void draw()
     {
-	DrawRectangle(x, y, width, height, ORANGE);
+        DrawRectangle(x, y, width, height, ORANGE);
     }
 
     void update()
     {
-	y += speed_y;
+        y += speed_y;
     }
 
     Rectangle getPaddleRec()
     {
-	Rectangle rec = { .x = x, .y = y, .width = (float) width, .height = (float) height };
-	return rec;
+        Rectangle rec = { .x = x, .y = y, .width = (float) width, .height = (float) height };
+        return rec;
     }
 
 };
@@ -40,23 +40,28 @@ public:
     float x, y;
     float speed_x, speed_y;
     float radius;
+    Color color;
+
+    bool is_colliding;
 
     void draw()
     {
-        DrawCircle(x, y, radius, ORANGE);
+        DrawCircle(x, y, radius, color);
     }
 
-    void update(int win_width, int win_height, Rectangle * prec)
+    void update(int win_width, int win_height, Rectangle prec)
     {
-	// Player paddle collision
-	bool playerHit = CheckCollisionCircleRec((Vector2) { x , y }, radius, *prec);
-	if (playerHit) speed_x *= -1;
+        // Player paddle collision
+        bool collision =
+            CheckCollisionCircleRec((Vector2) { .x = x , .y = y }, radius, prec);
 
-	// Wall collision
-	if (x + radius >= win_width || x - radius <= 0) speed_x *= -1;
-	if (y + radius >= win_height || y - radius <= 0) speed_y *= -1;
+        if (collision) speed_x *= -1;
 
-	// Move
+        // Wall collision
+        if (x + radius >= win_width || x - radius <= 0) speed_x *= -1;
+        if (y + radius >= win_height || y - radius <= 0) speed_y *= -1;
+
+        // Move
         x += speed_x;
         y += speed_y;
     }
@@ -77,6 +82,8 @@ int main()
     ball.y = (float) height / 2;
     ball.speed_x = 7;
     ball.speed_y = 7;
+    ball.is_colliding = false;
+    ball.color = ORANGE;
 
     // Player pladdle
     Paddle ppd;
@@ -84,7 +91,6 @@ int main()
     ppd.y = height/2 - PADDLE_HEIGHT / 2;
     ppd.width = PADDLE_WIDTH;
     ppd.height = PADDLE_HEIGHT;
-    Rectangle ppd_rec = ppd.getPaddleRec();
 
     // CPU paddle
     Paddle cpd;
@@ -98,15 +104,15 @@ int main()
         // Update
         if (IsKeyDown(KEY_LEFT_CONTROL) && IsKeyPressed(KEY_Q)) break;
 
-	if (IsKeyDown(KEY_DOWN)) { ppd.speed_y = 7; }
-	if (IsKeyReleased(KEY_DOWN)) { ppd.speed_y = 0; }
+        if (IsKeyDown(KEY_DOWN)) { ppd.speed_y = 7; }
+        if (IsKeyReleased(KEY_DOWN)) { ppd.speed_y = 0; }
 
-	if (IsKeyDown(KEY_UP)) ppd.speed_y = -7;
-	if (IsKeyReleased(KEY_UP)) ppd.speed_y = 0;
+        if (IsKeyDown(KEY_UP)) ppd.speed_y = -7;
+        if (IsKeyReleased(KEY_UP)) ppd.speed_y = 0;
 
-
-        ball.update(width, height, &ppd_rec);
-	ppd.update();
+        Rectangle ppd_rec = ppd.getPaddleRec();
+        ball.update(width, height, ppd_rec);
+        ppd.update();
 
         BeginDrawing();
 	    ClearBackground(DARKBLUE);
