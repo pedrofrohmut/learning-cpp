@@ -49,13 +49,15 @@ public:
         DrawCircle(x, y, radius, color);
     }
 
-    void update(int win_width, int win_height, Rectangle prec)
+    void update(int win_width, int win_height, Rectangle prec, Rectangle crec)
     {
         // Player paddle collision
-        bool collision =
+        bool p_collision =
             CheckCollisionCircleRec((Vector2) { .x = x , .y = y }, radius, prec);
+        bool c_collision =
+            CheckCollisionCircleRec((Vector2) { .x = x , .y = y }, radius, crec);
 
-        if (collision) speed_x *= -1;
+        if (p_collision || c_collision) speed_x *= -1;
 
         // Wall collision
         if (x + radius >= win_width || x - radius <= 0) speed_x *= -1;
@@ -104,23 +106,40 @@ int main()
         // Update
         if (IsKeyDown(KEY_LEFT_CONTROL) && IsKeyPressed(KEY_Q)) break;
 
-        if (IsKeyDown(KEY_DOWN)) { ppd.speed_y = 7; }
-        if (IsKeyReleased(KEY_DOWN)) { ppd.speed_y = 0; }
-
+        // Player paddle go up
         if (IsKeyDown(KEY_UP)) ppd.speed_y = -7;
         if (IsKeyReleased(KEY_UP)) ppd.speed_y = 0;
 
+        // Player paddle go down
+        if (IsKeyDown(KEY_DOWN)) { ppd.speed_y = 7; }
+        if (IsKeyReleased(KEY_DOWN)) { ppd.speed_y = 0; }
+
+        // Cpu paddle go up
+        if (IsKeyDown(KEY_W)) cpd.speed_y = -7;
+        if (IsKeyReleased(KEY_W)) cpd.speed_y = 0;
+
+        // Cpu paddle go down
+        if (IsKeyDown(KEY_S)) cpd.speed_y = 7;
+        if (IsKeyReleased(KEY_S)) cpd.speed_y = 0;
+
+        // Update for Ball
         Rectangle ppd_rec = ppd.getPaddleRec();
-        ball.update(width, height, ppd_rec);
+        Rectangle cpd_rec = cpd.getPaddleRec();
+        ball.update(width, height, ppd_rec, cpd_rec);
+
+        // Update for Player
         ppd.update();
 
+        // Update Cpu
+        cpd.update();
+
         BeginDrawing();
-	    ClearBackground(DARKBLUE);
-	    ball.draw();
-	    ppd.draw();
-	    cpd.draw();
-	    DrawLine(width/2, 0, width/2, height, ORANGE);
-	    //DrawLine(0, height/2, width, height/2, ORANGE); // Dev ref (comment for prod)
+            ClearBackground(DARKBLUE);
+            ball.draw();
+            ppd.draw();
+            cpd.draw();
+            DrawLine(width/2, 0, width/2, height, ORANGE);
+            //DrawLine(0, height/2, width, height/2, ORANGE); // Dev ref (comment for prod)
         EndDrawing();
     }
 
