@@ -1,8 +1,12 @@
 CXX = g++
 
-FLAGS = -Wall -std=c++17
+FLAGS = -Wall -Wextra -std=c++17
 
 all: hello student
+
+memory: memory.cpp
+	$(CXX) $(FLAGS) -o memory.out memory.cpp
+	./memory.out
 
 hello: hello.cpp
 	$(CXX) $(FLAGS) -o hello.out hello.cpp
