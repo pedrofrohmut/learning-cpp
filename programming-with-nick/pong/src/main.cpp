@@ -42,8 +42,6 @@ public:
     float radius;
     Color color;
 
-    bool is_colliding;
-
     void draw()
     {
         DrawCircle(x, y, radius, color);
@@ -51,7 +49,6 @@ public:
 
     void update(int win_width, int win_height, Rectangle prec, Rectangle crec)
     {
-        // Player paddle collision
         bool p_collision =
             CheckCollisionCircleRec((Vector2) { .x = x , .y = y }, radius, prec);
         bool c_collision =
