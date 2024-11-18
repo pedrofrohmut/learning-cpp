@@ -1,3 +1,3 @@
 #!/usr/bin/bash
 
-g++ -o hello.out hello.cpp && ./hello.out
+g++ -Wall -Wextra -Werror -o hello.out hello.cpp && ./hello.out

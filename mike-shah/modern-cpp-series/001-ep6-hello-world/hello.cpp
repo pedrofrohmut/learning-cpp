@@ -1,6 +1,6 @@
 #include <iostream>
 
-int main()
+int main(void)
 {
     // std::cout - Write to standard output
     std::cout << "Hello, World" << std::endl;
