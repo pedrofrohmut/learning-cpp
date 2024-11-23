@@ -1,12 +1,22 @@
+#include "globals.h"
+
 #include "raylib.h"
+
+#include "grid.h"
 
 int main(void)
 {
-    InitWindow(800, 600, "Hello, World!");
+    Grid grid = Grid();
+    grid.initialize();
+    grid.printGrid();
+
+    InitWindow(grid.getWidth(), grid.getHeight(), "Hello, World!");
+    SetTargetFPS(30);
 
     while (!WindowShouldClose()) {
         BeginDrawing();
-        ClearBackground(RED);
+        ClearBackground(clrDarkBlue);
+        grid.draw();
         EndDrawing();
     }
 
