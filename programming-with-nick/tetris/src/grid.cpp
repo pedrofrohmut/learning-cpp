@@ -52,6 +52,7 @@ std::vector<Color> Grid::getCellColors()
 
 void Grid::draw()
 {
+    // Draw cells
     for (int i = 0; i < this->numRows; i++) {
         for (int j = 0; j < this->numCols; j++) {
             const size_t posX = j * this->cellSize;
@@ -60,6 +61,20 @@ void Grid::draw()
             const Color cellColor = this->colors[cellValue];
             DrawRectangle(posX, posY, this->cellSize, this->cellSize, cellColor);
         }
+    }
+
+    // Draw Vertical Lines
+    for (int i = 1; i < this->numCols; ++i) {
+        const int x = i * this->cellSize;
+        const int endY = this->numRows * this->cellSize;
+        DrawLine(x, 0, x, endY, WHITE);
+    }
+
+    // Draw Horizontal Lines
+    for (int i = 1; i < this->numRows; ++i) {
+        const int y = i * this->cellSize;
+        const int endX = this->numCols * cellSize;
+        DrawLine(0, y, endX, y, WHITE);
     }
 }
 
