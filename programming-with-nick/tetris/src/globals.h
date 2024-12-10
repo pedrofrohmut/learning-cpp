@@ -13,3 +13,5 @@ extern const Color gridClrYellow;
 extern const Color gridClrPurple;
 extern const Color gridClrCyan;
 extern const Color gridClrBlue;
+
+extern const Color gridClrGridLines;

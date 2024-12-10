@@ -23,6 +23,7 @@ class Grid
         void initialize(void);
         void printGrid(void);
         void draw(void);
-        int getHeight();
-        int getWidth();
+        int getHeight(void);
+        int getWidth(void);
+        void setCell(size_t row, size_t col, int colorCode);
 };

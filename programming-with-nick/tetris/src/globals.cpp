@@ -13,3 +13,5 @@ const Color gridClrYellow = {237, 234, 4, 255};
 const Color gridClrPurple = {166, 0, 247, 255};
 const Color gridClrCyan = {21, 204, 209, 255};
 const Color gridClrBlue = {13, 64, 216, 255};
+
+const Color gridClrGridLines = {64, 64, 64, 255};

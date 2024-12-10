@@ -55,27 +55,36 @@ void Grid::draw()
     // Draw cells
     for (int i = 0; i < this->numRows; i++) {
         for (int j = 0; j < this->numCols; j++) {
-            const size_t posX = j * this->cellSize;
-            const size_t posY = i * this->cellSize;
+            const int size = this->cellSize;
+
+            // + 1 on position and -1 on size to make a 1px margin
+            const int posX = j * size + 1;
+            const int posY = i * size + 1;
+            const int width = size - 1;
+            const int height = width;
+
             const size_t cellValue = this->grid[i][j];
             const Color cellColor = this->colors[cellValue];
-            DrawRectangle(posX, posY, this->cellSize, this->cellSize, cellColor);
+
+            DrawRectangle(posX, posY, width, height, cellColor);
         }
     }
 
+#if 0
     // Draw Vertical Lines
     for (int i = 1; i < this->numCols; ++i) {
         const int x = i * this->cellSize;
         const int endY = this->numRows * this->cellSize;
-        DrawLine(x, 0, x, endY, WHITE);
+        DrawLine(x, 0, x, endY, gridClrGridLines);
     }
 
     // Draw Horizontal Lines
     for (int i = 1; i < this->numRows; ++i) {
         const int y = i * this->cellSize;
         const int endX = this->numCols * cellSize;
-        DrawLine(0, y, endX, y, WHITE);
+        DrawLine(0, y, endX, y, gridClrGridLines);
     }
+#endif
 }
 
 int Grid::getHeight()
@@ -86,4 +95,9 @@ int Grid::getHeight()
 int Grid::getWidth()
 {
     return this->numCols * this->cellSize;
+}
+
+void Grid::setCell(size_t row, size_t col, int colorCode)
+{
+    this->grid[row][col] = colorCode;
 }
