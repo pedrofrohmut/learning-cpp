@@ -15,8 +15,6 @@ class Grid
         int cellSize;
         std::vector<Color> colors;
 
-        std::vector<Color> getCellColors();
-
     public:
         Grid(void);
         ~Grid(void);

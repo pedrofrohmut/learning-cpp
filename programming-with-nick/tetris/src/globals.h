@@ -1,5 +1,7 @@
 #pragma once
 
+#include <vector>
+
 #include "raylib.h"
 
 extern const Color clrDarkBlue;
@@ -15,3 +17,5 @@ extern const Color gridClrCyan;
 extern const Color gridClrBlue;
 
 extern const Color gridClrGridLines;
+
+std::vector<Color> getCellColors(void);

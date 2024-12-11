@@ -15,3 +15,17 @@ const Color gridClrCyan = {21, 204, 209, 255};
 const Color gridClrBlue = {13, 64, 216, 255};
 
 const Color gridClrGridLines = {64, 64, 64, 255};
+
+std::vector<Color> getCellColors()
+{
+    return {
+        gridClrDarkGrey,
+        gridClrGreen,
+        gridClrRed,
+        gridClrOrange,
+        gridClrYellow,
+        gridClrPurple,
+        gridClrCyan,
+        gridClrBlue
+    };
+}

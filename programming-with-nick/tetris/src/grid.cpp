@@ -36,20 +36,6 @@ void Grid::printGrid(void)
     }
 }
 
-std::vector<Color> Grid::getCellColors()
-{
-    return {
-        gridClrDarkGrey,
-        gridClrGreen,
-        gridClrRed,
-        gridClrOrange,
-        gridClrYellow,
-        gridClrPurple,
-        gridClrCyan,
-        gridClrBlue
-    };
-}
-
 void Grid::draw()
 {
     // Draw cells
