@@ -1,66 +1,66 @@
-#define SDL_MAIN_USE_CALLBACKS 1
-
 #include <SDL3/SDL.h>
-#include <SDL3/SDL_main.h>
 
-// #include <stdlib.h>
-// #include "stdio.h"
-// #include <SDL3/SDL_render.h>
+#include <memory>
+#include <iostream>
 
-static const float fps = 60.0;
-static const float frame_time = 1000.0 / fps;
-
-static SDL_Window *window = NULL;
-static SDL_Renderer *renderer = NULL;
-
-SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[])
+struct App
 {
-    if (!SDL_Init(SDL_INIT_VIDEO)) {
+    SDL_Window *window = nullptr;
+    SDL_Renderer *renderer = nullptr;
+
+    ~App()
+    {
+        SDL_Log("Closing app...");
+        // Clean up
+        if (renderer) SDL_DestroyRenderer(renderer);
+        if (window) SDL_DestroyWindow(window);
+        SDL_Quit();
+        std::cout << "Render and Window cleaned up. SDL App Quit\n";
+    }
+};
+
+int main(int argc, char **argv)
+{
+    static std::unique_ptr<App> app = std::make_unique<App>();
+
+    SDL_InitFlags init_flags = SDL_INIT_VIDEO;
+    if (!SDL_Init(init_flags)) {
         SDL_Log("Could not init SDL: %s", SDL_GetError());
-        return SDL_APP_FAILURE;
+        return 1;
     }
 
-    if (!SDL_CreateWindowAndRenderer("main", 800, 600, 0, &window, &renderer)) {
+    SDL_WindowFlags win_flags = 0;
+    if (!SDL_CreateWindowAndRenderer("Tutorial", 800, 600, win_flags, &app->window, &app->renderer)) {
         SDL_Log("Could not create window and renderer: %s", SDL_GetError());
-        return SDL_APP_FAILURE;
+        return 1;
     }
 
-    return SDL_APP_CONTINUE;
-}
 
-SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event)
-{
-    if (event->type == SDL_EVENT_QUIT) {
-        return SDL_APP_SUCCESS; /* end the program, reporting success to the OS. */
-    }
-    return SDL_APP_CONTINUE;
-}
+    int press_count = 0;
+    while (true) { // App loop
+        SDL_Event event;
 
-SDL_AppResult SDL_AppIterate(void *appstate)
-{
-    const double now = ((double)SDL_GetTicks()) / 1000.0; /* convert from milliseconds to seconds. */
+        while (SDL_PollEvent(&event)) { // Event handling loop. poll until all events are handled
+            //Decides what to do in the current event
 
-    /* choose the color for the frame we will draw. The sine wave trick makes it
-     * fade between colors smoothly. */
-    const float red = (float)(0.5 + 0.5 * SDL_sin(now));
-    const float green = (float)(0.5 + 0.5 * SDL_sin(now + SDL_PI_D * 2 / 3));
-    const float blue = (float)(0.5 + 0.5 * SDL_sin(now + SDL_PI_D * 4 / 3));
-    SDL_SetRenderDrawColorFloat(
-            renderer, red, green, blue,
-            SDL_ALPHA_OPAQUE_FLOAT); /* new color, full alpha. */
+            switch (event.type) {
+            case SDL_EVENT_QUIT:
+                goto end_app_loop;
+            case SDL_EVENT_KEY_DOWN:
+                SDL_Log("[%d] Key pressed: %d", press_count, event.key.key);
+                press_count += 1;
+                if (event.key.key == SDLK_ESCAPE) {
+                    goto end_app_loop;
+                }
+            }
 
-    /* clear the window to the draw color. */
-    SDL_RenderClear(renderer);
+        } // Event loop
 
-    /* put the newly-cleared rendering on the screen. */
-    SDL_RenderPresent(renderer);
+        // Update game state, draw the current frame
 
-    SDL_Delay(frame_time); /* Delay to limit fps */
+        SDL_Delay(16); // ~60fps
+    } // App loop
+end_app_loop:
 
-    return SDL_APP_CONTINUE; /* carry on with the program! */
-}
-
-void SDL_AppQuit(void *appstate, SDL_AppResult result)
-{
-    /* SDL will clean up the window/renderer for us. */
+    return 0;
 }
