@@ -2,4 +2,7 @@
 
 set -xe
 
-g++ src/main.cpp -o out/hello_app -I./SDL/include/SDL3 -L./SDL/build/ -lSDL3
+# mkdir -p ./out
+# rm out/*
+
+g++ src/main.cpp -o out/app -I./SDL/include/SDL3 -L./SDL/build/ -lSDL3
