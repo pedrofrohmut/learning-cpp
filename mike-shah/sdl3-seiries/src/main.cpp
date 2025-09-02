@@ -1,7 +1,8 @@
 #include <SDL3/SDL.h>
-#include <cstdio>
+#include <SDL3/SDL_timer.h>
 #include <cstdlib>
 #include <memory>
+#include <string>
 
 #define WIN_W 800.0
 #define WIN_H 600.0
@@ -11,12 +12,15 @@ struct App
 {
     SDL_Window *window = nullptr;
     SDL_Renderer *renderer = nullptr;
-    int winw = 0;
-    int winh = 0;
     SDL_Event event;
 
-    App(const char *title)
+    int winw = 0;
+    int winh = 0;
+    std::string title = "SDL3 Tutorial";
+
+    App()
     {
+
         SDL_InitFlags init_flags = SDL_INIT_VIDEO;
         if (!SDL_Init(init_flags)) {
             SDL_Log("Could not init SDL: %s", SDL_GetError());
@@ -24,7 +28,7 @@ struct App
         }
 
         SDL_WindowFlags win_flags = 0;
-        if (!SDL_CreateWindowAndRenderer(title, WIN_W, WIN_H, win_flags, &window, &renderer)) {
+        if (!SDL_CreateWindowAndRenderer(title.c_str(), WIN_W, WIN_H, win_flags, &window, &renderer)) {
             SDL_Log("Could not create window and renderer: %s", SDL_GetError());
             exit(1);
         }
@@ -61,37 +65,52 @@ struct App
     void run()
     {
         bool is_running = true;
-        Uint64 start;
-        Uint64 elapsed;
-        Uint32 frames = 0;
+
+        // Values to calculate FPS and delay for target fps
         Uint64 ref_time = SDL_GetTicks();
-        static char title_buffer[100];
+        const Uint32 num_of_sec = 5;
+        const Uint32 sec_in_ms = num_of_sec * 1000;
+        Uint32 frames = 0;
+        Uint32 current_fps = 0;
+        Uint64 frame_time = 0;
 
         while (is_running) {
-            start = SDL_GetTicks();
+            Uint64 start = SDL_GetTicks();
+            Uint64 start_frame_time = SDL_GetTicks(); // Keep it separate from 'start' so is easy to change to NS if needed
 
             is_running = HandleIO();
 
-            if (is_running) {
-                Update();
+            if (!is_running) { break; }
 
-                Render();
+            Update();
 
-                // Calculate fps
-                ++frames;
-                if (start - ref_time >= 1000) {
-                    snprintf(title_buffer, sizeof(title_buffer), "SDL3 Tutorial (fps %d)", frames);
-                    SDL_SetWindowTitle(window, title_buffer);
-                    ref_time = start;
-                    frames = 0;
+            Render();
+
+            // Calculate fps
+            ++frames;
+            if ((start - ref_time) >= sec_in_ms) {
+                Uint32 fps = frames / num_of_sec;
+
+                title = "SDL3 Tutorial (fps: " + std::to_string(fps) + ", ft: " + std::to_string(frame_time) + ")";
+                SDL_Log("%s", title.c_str());
+
+                if (current_fps != fps) { // Minimal updates on window title
+                    SDL_SetWindowTitle(window, title.c_str());
                 }
 
-                // Calculate delay to keep fps stable
-                elapsed = SDL_GetTicks() - start;
-                if (elapsed < DELAY_60FPS) { // Avoid negative
-                    SDL_Delay(DELAY_60FPS - elapsed);
-                }
+                current_fps = fps;
+                ref_time = start;
+                frames = 0;
             }
+
+            // Calculate delay to keep fps stable
+            Uint64 elapsed = SDL_GetTicks() - start;
+            if (elapsed < DELAY_60FPS) { // Avoid negative
+                SDL_Delay(DELAY_60FPS - elapsed);
+            }
+
+            // Track frame time (ms)
+            frame_time = SDL_GetTicks() - start_frame_time;
         }
 
         SDL_Log("Quit event called. Quiting...");
@@ -110,7 +129,7 @@ struct App
 
 int main(int argc, const char **argv)
 {
-    const std::unique_ptr<App> app = std::make_unique<App>("SDL3 Tutorial");
+    const std::unique_ptr<App> app = std::make_unique<App>();
     app->run();
     return 0;
 }
