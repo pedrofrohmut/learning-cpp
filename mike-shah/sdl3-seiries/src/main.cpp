@@ -7,7 +7,7 @@
 #define WIN_H 600.0
 #define DELAY_60FPS 16
 
-struct SDLApplication
+struct App
 {
     SDL_Window *window = nullptr;
     SDL_Renderer *renderer = nullptr;
@@ -15,7 +15,7 @@ struct SDLApplication
     int winh = 0;
     SDL_Event event;
 
-    SDLApplication(const char *title)
+    App(const char *title)
     {
         SDL_InitFlags init_flags = SDL_INIT_VIDEO;
         if (!SDL_Init(init_flags)) {
@@ -37,32 +37,67 @@ struct SDLApplication
         SDL_Log("Window created with width of %d and height of %d", winw, winh);
     }
 
-    void run()
+    bool HandleIO()
     {
-        while (true) { // Main loop
-
-            while (SDL_PollEvent(&event)) { // Event loop
-                switch (event.type) {
-                case SDL_EVENT_QUIT:
-                    goto end_app_loop;
-                case SDL_EVENT_KEY_DOWN:
-                    if ((event.key.mod == SDL_KMOD_LCTRL && event.key.key == SDLK_Q) ||
-                        (event.key.mod == SDL_KMOD_RCTRL && event.key.key == SDLK_Q)) {
-                        goto end_app_loop;
-                    }
-                    break;
+        while (SDL_PollEvent(&event)) {
+            switch (event.type) {
+            case SDL_EVENT_QUIT:
+                return false;
+            case SDL_EVENT_KEY_DOWN:
+                if ((event.key.mod == SDL_KMOD_LCTRL && event.key.key == SDLK_Q) ||
+                    (event.key.mod == SDL_KMOD_RCTRL && event.key.key == SDLK_Q)) {
+                    return false;
                 }
-            } // Event loop
-
-            SDL_Delay(DELAY_60FPS);
-        } // Main loop
-
-    end_app_loop:
-        SDL_Log("Quit event called. Quiting...");
-        return;
+                break;
+            }
+        }
+        return true;
     }
 
-    ~SDLApplication()
+    void Update() {}
+
+    void Render() {}
+
+    void run()
+    {
+        bool is_running = true;
+        Uint64 start;
+        Uint64 elapsed;
+        Uint32 frames = 0;
+        Uint64 ref_time = SDL_GetTicks();
+        static char title_buffer[100];
+
+        while (is_running) {
+            start = SDL_GetTicks();
+
+            is_running = HandleIO();
+
+            if (is_running) {
+                Update();
+
+                Render();
+
+                // Calculate fps
+                ++frames;
+                if (start - ref_time >= 1000) {
+                    snprintf(title_buffer, sizeof(title_buffer), "SDL3 Tutorial (fps %d)", frames);
+                    SDL_SetWindowTitle(window, title_buffer);
+                    ref_time = start;
+                    frames = 0;
+                }
+
+                // Calculate delay to keep fps stable
+                elapsed = SDL_GetTicks() - start;
+                if (elapsed < DELAY_60FPS) { // Avoid negative
+                    SDL_Delay(DELAY_60FPS - elapsed);
+                }
+            }
+        }
+
+        SDL_Log("Quit event called. Quiting...");
+    }
+
+    ~App()
     {
         SDL_Log("Closing app...");
         // Clean up
@@ -75,7 +110,7 @@ struct SDLApplication
 
 int main(int argc, const char **argv)
 {
-    const std::unique_ptr<SDLApplication> app = std::make_unique<SDLApplication>("SDL3 Tutorial");
+    const std::unique_ptr<App> app = std::make_unique<App>("SDL3 Tutorial");
     app->run();
     return 0;
 }
