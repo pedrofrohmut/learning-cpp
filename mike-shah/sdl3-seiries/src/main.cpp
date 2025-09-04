@@ -1,5 +1,6 @@
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_timer.h>
+#include <SDL3/SDL_render.h>
 #include <cstdlib>
 #include <memory>
 #include <string>
@@ -13,9 +14,10 @@ struct App
     SDL_Window *window = nullptr;
     SDL_Renderer *renderer = nullptr;
     SDL_Event event;
-
-    int winw = 0;
-    int winh = 0;
+    SDL_Surface *surface = nullptr;
+    SDL_Texture *texture = nullptr;
+    int texw, texh;
+    int winw, winh;
     std::string title = "SDL3 Tutorial";
 
     App()
@@ -28,28 +30,64 @@ struct App
         }
 
         SDL_WindowFlags win_flags = 0;
-        if (!SDL_CreateWindowAndRenderer(title.c_str(), WIN_W, WIN_H, win_flags, &window, &renderer)) {
+        if (!SDL_CreateWindowAndRenderer(this->title.c_str(), WIN_W, WIN_H, win_flags, &this->window, &this->renderer)) {
             SDL_Log("Could not create window and renderer: %s", SDL_GetError());
             exit(1);
         }
 
-        if (!SDL_GetWindowSize(window, &winw, &winh)) {
+        if (!SDL_GetWindowSize(this->window, &this->winw, &this->winh)) {
             SDL_Log("Could not get window size: %s", SDL_GetError());
             exit(1);
         }
 
-        SDL_Log("Window created with width of %d and height of %d", winw, winh);
+        SDL_Log("Window created with width of %d and height of %d", this->winw, this->winh);
+
+        // Load bmp from base path
+        char *bmp_path;
+        SDL_asprintf(&bmp_path, "%sbackground.bmp", SDL_GetBasePath()); // SDL_Log("BMP Path: '%s'", bmp_path);
+        this->surface = SDL_LoadBMP(bmp_path);
+        if (this->surface == nullptr) {
+            SDL_Log("Could not load the bmp image: %s", SDL_GetError());
+            exit(1);
+        }
+        SDL_Log("BMP Loaded");
+
+        // Clean up string for path
+        SDL_free(bmp_path);
+
+        // Use surface to make the texture
+        this->texw = this->surface->w;
+        this->texh = this->surface->h;
+        this->texture = SDL_CreateTextureFromSurface(this->renderer, this->surface);
+        if (this->texture == nullptr) {
+            SDL_Log("Could not create texture: %s", SDL_GetError());
+            exit(1);
+        }
+        SDL_Log("Texture loaded");
+
+        // Clean up surface not needed anymore
+        SDL_DestroySurface(this->surface);
+    }
+
+    ~App()
+    {
+        SDL_Log("Closing app...");
+        // Clean up
+        if (this->renderer) SDL_DestroyRenderer(this->renderer);
+        if (this->window) SDL_DestroyWindow(this->window);
+        SDL_Quit();
+        SDL_Log("Render and Window cleaned up. SDL App Quit");
     }
 
     bool HandleIO()
     {
-        while (SDL_PollEvent(&event)) {
-            switch (event.type) {
+        while (SDL_PollEvent(&this->event)) {
+            switch (this->event.type) {
             case SDL_EVENT_QUIT:
                 return false;
             case SDL_EVENT_KEY_DOWN:
-                if ((event.key.mod == SDL_KMOD_LCTRL && event.key.key == SDLK_Q) ||
-                    (event.key.mod == SDL_KMOD_RCTRL && event.key.key == SDLK_Q)) {
+                if ((this->event.key.mod == SDL_KMOD_LCTRL && this->event.key.key == SDLK_Q) ||
+                    (this->event.key.mod == SDL_KMOD_RCTRL && this->event.key.key == SDLK_Q)) {
                     return false;
                 }
                 break;
@@ -60,7 +98,13 @@ struct App
 
     void Update() {}
 
-    void Render() {}
+    void Render() {
+        // Set the background texture
+        SDL_RenderTexture(this->renderer, this->texture, nullptr, nullptr);
+
+        // End Drawing
+        SDL_RenderPresent(this->renderer); // Put the new renderer on screen
+    }
 
     void run()
     {
@@ -91,11 +135,11 @@ struct App
             if ((start - ref_time) >= sec_in_ms) {
                 Uint32 fps = frames / num_of_sec;
 
-                title = "SDL3 Tutorial (fps: " + std::to_string(fps) + ", ft: " + std::to_string(frame_time) + ")";
-                SDL_Log("%s", title.c_str());
+                this->title = "SDL3 Tutorial (fps: " + std::to_string(fps) + ", ft: " + std::to_string(frame_time) + ")";
+                SDL_Log("%s", this->title.c_str());
 
                 if (current_fps != fps) { // Minimal updates on window title
-                    SDL_SetWindowTitle(window, title.c_str());
+                    SDL_SetWindowTitle(this->window, this->title.c_str());
                 }
 
                 current_fps = fps;
@@ -114,16 +158,6 @@ struct App
         }
 
         SDL_Log("Quit event called. Quiting...");
-    }
-
-    ~App()
-    {
-        SDL_Log("Closing app...");
-        // Clean up
-        if (renderer) SDL_DestroyRenderer(renderer);
-        if (window) SDL_DestroyWindow(window);
-        SDL_Quit();
-        SDL_Log("Render and Window cleaned up. SDL App Quit");
     }
 };
 
