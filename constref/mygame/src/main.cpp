@@ -1,3 +1,4 @@
+#include "SDL_timer.h"
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_events.h>
 #include <SDL3/SDL_main.h>
@@ -9,8 +10,18 @@
 
 #include <memory>
 #include <cstdlib>
+#include <string>
 
-const Uint32 ONE_SECOND = 1000;
+// Global Constants
+const Uint64 ONE_SECOND_MS = 1000;
+const Uint64 ONE_SECOND_NS = 1000 * 1000 * 1000;
+const Uint64 DELAY_60FPS_MS = 16;
+const Uint64 DELAY_60FPS_NS = 16666667;
+
+std::string get_data_path_for(const char *path)
+{
+    return std::string(SDL_GetBasePath()) + "../data/" + path;
+}
 
 struct MyGame
 {
@@ -19,7 +30,7 @@ struct MyGame
     const char *win_title = "MyGame";
     SDL_Window *window = nullptr;
     SDL_Renderer *renderer = nullptr;
-    SDL_Texture *idleTex;
+    SDL_Texture *idle_tex;
 
     MyGame()
     {
@@ -40,7 +51,8 @@ struct MyGame
             exit(1);
         }
 
-        idleTex = IMG_LoadTexture(this->renderer, "../data/idle.png");
+        idle_tex = IMG_LoadTexture(this->renderer, get_data_path_for("idle.png").c_str());
+        SDL_SetTextureScaleMode(this->idle_tex, SDL_SCALEMODE_NEAREST);
     }
 
     ~MyGame()
@@ -51,53 +63,73 @@ struct MyGame
         SDL_Quit();
     }
 
+    bool HandleIO()
+    {
+        SDL_Event event = {};
+        while (SDL_PollEvent(&event)) {
+            switch (event.type) {
+            case SDL_EVENT_QUIT:
+                return false;
+            }
+        }
+        return true;
+    }
+
+    void Update() {}
+
+    void Render()
+    {
+        // Make the buffer renderer
+        SDL_SetRenderDrawColor(this->renderer, 26, 27, 44, 255); // Toukyou Night #1a1b2c
+        SDL_RenderClear(this->renderer);
+
+        SDL_FRect src_rect = { .x = 0, .y = 0, .w = 32, .h = 32 };
+        SDL_RenderTexture(this->renderer, this->idle_tex, &src_rect, nullptr);
+
+        // Draws the processed buffer in the window
+        SDL_RenderPresent(this->renderer);
+    }
+
     void Run()
     {
         SDL_Log("INFO: SDL Application initiated and running");
         bool running = true;
 
-        Uint32 frame_time_acc_ms = 0;
+        Uint64 frame_time_acc_ns = 0;
         Uint32 fps = 0;
 
         while (true) // Main game loop
         {
-            Uint64 start = SDL_GetTicks();
+            Uint64 start_ns = SDL_GetTicksNS();
 
-            SDL_Event event = {};
-            while (SDL_PollEvent(&event)) {
-                switch (event.type) {
-                case SDL_EVENT_QUIT:
-                    running = false;
-                    break;
-                }
-            }
+            running = HandleIO();
 
             if (!running) break;
 
-            // Make the buffer renderer
-            SDL_SetRenderDrawColor(this->renderer, 26, 27, 44, 255); // Toukyou Night #1a1b2c
-            SDL_RenderClear(this->renderer);
+            Update();
 
-            SDL_RenderTexture(this->renderer, this->idleTex, nullptr, nullptr);
+            Render();
 
-            // Draws the processed buffer in the window
-            SDL_RenderPresent(this->renderer);
+            Uint64 frame_time_ns = SDL_GetTicksNS() - start_ns;
 
-            SDL_Delay(16);
+            // Calculate the delay to limit it and keep a regular fps
+            if (frame_time_ns < DELAY_60FPS_NS) {
+                Uint64 delay_ns = DELAY_60FPS_NS - frame_time_ns;
+                SDL_DelayNS(delay_ns);
+            }
 
-            // Track FPS and Frame Time
-            Uint64 frame_time_ms = SDL_GetTicks() - start;
+            // Calculate fps based on frame time in ns
             ++fps;
-            frame_time_acc_ms += frame_time_ms;
-            if (frame_time_acc_ms >= ONE_SECOND) {
-                SDL_Log("FPS: %d, Frame time: %zums", fps, frame_time_ms);
+            frame_time_acc_ns += DELAY_60FPS_NS;
+            if (frame_time_acc_ns >= ONE_SECOND_NS) {
+                SDL_Log("FPS: %d, Frame time: %zu nano seconds", fps, frame_time_ns);
                 fps = 0;
-                frame_time_acc_ms = 0;
+                frame_time_acc_ns = 0;
             }
         }
 
         // Clean up assets
-        SDL_DestroyTexture(this->idleTex);
+        SDL_DestroyTexture(this->idle_tex);
 
         SDL_Log("INFO: Quit event called. Quiting...");
     }

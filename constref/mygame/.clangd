@@ -1,0 +1,4 @@
+CompileFlags:
+  Add:
+	- -I${HOME}/programming/lib/SDL3/include/SDL3
+	- -I${HOME}/programming/lib/SDL_image/include/SDL3_image
