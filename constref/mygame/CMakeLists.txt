@@ -4,6 +4,7 @@ project(MyGame)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 
 # SDL3
@@ -15,11 +16,11 @@ add_subdirectory(${SDL3_DIR} ${CMAKE_BINARY_DIR}/SDL3)
 
 
 # SDL3_image
-set(SDL3_IMAGE_DIR $ENV{HOME}/programming/lib/SDL3_image)
+set(SDL3_IMAGE_DIR $ENV{HOME}/programming/lib/SDL_image)
 if(NOT EXISTS ${SDL3_IMAGE_DIR})
     message(FATAL_ERROR "SDL3_image not found at: " ${SDL3_IMAGE_DIR})
 endif()
-add_subdirectory(${SDL3_IMAGE_DIR} ${CMAKE_BINARY_DIR}/SDL3_image)
+add_subdirectory(${SDL3_IMAGE_DIR} ${CMAKE_BINARY_DIR}/SDL_image)
 
 
 add_executable(mygame src/main.cpp)
