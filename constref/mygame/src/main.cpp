@@ -40,7 +40,7 @@ struct MyGame
             exit(1);
         }
 
-        idleTex = IMG_LoadTexture(this->renderer, "data/idle.png");
+        idleTex = IMG_LoadTexture(this->renderer, "../data/idle.png");
     }
 
     ~MyGame()
@@ -77,6 +77,8 @@ struct MyGame
             // Make the buffer renderer
             SDL_SetRenderDrawColor(this->renderer, 26, 27, 44, 255); // Toukyou Night #1a1b2c
             SDL_RenderClear(this->renderer);
+
+            SDL_RenderTexture(this->renderer, this->idleTex, nullptr, nullptr);
 
             // Draws the processed buffer in the window
             SDL_RenderPresent(this->renderer);
