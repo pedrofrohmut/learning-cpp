@@ -1,213 +1,211 @@
-#include "SDL_keyboard.h"
-#include "SDL_timer.h"
 #include <SDL3/SDL.h>
-#include <SDL3/SDL_events.h>
-#include <SDL3/SDL_main.h>
-#include <SDL3/SDL_messagebox.h>
-#include <SDL3/SDL_render.h>
-#include <SDL3/SDL_video.h>
-
 #include <SDL3_image/SDL_image.h>
 
 #include <memory>
-#include <cstdlib>
-#include <string>
+// #include <vector>
+
+#include "SDL_keyboard.h"
+// #include "animation.h"
 
 // Global Constants
-const Uint64 ONE_SECOND_MS = 1000;
-const Uint64 ONE_SECOND_NS = 1000 * 1000 * 1000;
-const Uint64 DELAY_60FPS_MS = 16;
-const Uint64 DELAY_60FPS_NS = 16666667;
+// const Uint64 ONE_SECOND_MS = 1000;
+// const Uint64 ONE_SECOND_NS = 1000 * 1000 * 1000;
+// const Uint64 DELAY_60FPS_MS = 16;
+// const Uint64 DELAY_60FPS_NS = 16666667;
 
-std::string get_data_path_for(const std::string& path) // Pass by ref but const so the value wont change in the function
+std::string get_data_path_for(const std::string &file_path)
 {
-    return std::string(SDL_GetBasePath()) + "../data/" + path;
+    return std::string(SDL_GetBasePath()) + "../data/" + file_path;
 }
 
-struct MyGame
+struct SDLState
 {
-    int winw = 1600; int winh = 900; // 16:9 HD+ 1600x900
-
-    const char *win_title = "MyGame";
-    SDL_Window *window = nullptr;
-    SDL_Renderer *renderer = nullptr;
-    SDL_Texture *idle_tex;
-
+    int window_width = 1600;
+    int window_height = 900;
     int logical_width = 640;
-    int logical_heigth = 320;
-
-    // To hold SDL Data on window resizes
+    int logical_height = 320;
     int width;
     int height;
-
-    MyGame() {}
-
-    ~MyGame()
-    {
-        SDL_Log("INFO: Cleaning Up...");
-        if (this->renderer) SDL_DestroyRenderer(this->renderer);
-        if (this->window) SDL_DestroyWindow(this->window);
-        SDL_Quit();
-    }
-
-    bool Init()
-    {
-        if (!SDL_Init(SDL_INIT_VIDEO)) {
-            SDL_Log("ERROR: Could not init the SDL3 application: %s", SDL_GetError());
-            return false;
-        }
-
-        this->window = SDL_CreateWindow(this->win_title, this->winw, this->winh, SDL_WINDOW_RESIZABLE);
-        if (this->window == nullptr) {
-            SDL_Log("ERROR: Could not create a window: %s", SDL_GetError());
-            return false;
-        }
-
-        this->renderer = SDL_CreateRenderer(this->window, nullptr);
-        if (this->renderer == nullptr) {
-            SDL_Log("ERROR: Could not create the renderer: %s", SDL_GetError());
-            return false;
-        }
-
-        // Sizes the size of the presentation idependently of the size of the window
-        if (!SDL_SetRenderLogicalPresentation(this->renderer, this->logical_width, this->logical_heigth,
-                SDL_LOGICAL_PRESENTATION_LETTERBOX)) {
-            SDL_Log("ERROR: Could not set the logical presentation: %s", SDL_GetError());
-            return false;
-        }
-
-        return true;
-    }
-
-    bool HandleIO()
-    {
-        SDL_Event event = {};
-        while (SDL_PollEvent(&event)) {
-            switch (event.type) {
-            case SDL_EVENT_QUIT:
-                return false;
-            case SDL_EVENT_WINDOW_RESIZED:
-                this->width = event.window.data1;
-                this->height = event.window.data2;
-                break;
-            }
-        }
-        return true;
-    }
-
-    void Update() {}
-
-    void Render() {}
-
-    void Run()
-    {
-        // Loag game assets
-        idle_tex = IMG_LoadTexture(this->renderer, get_data_path_for("idle.png").c_str());
-        SDL_SetTextureScaleMode(this->idle_tex, SDL_SCALEMODE_NEAREST);
-
-        const bool *keys = SDL_GetKeyboardState(nullptr);
-        float playerX = 150.0;
-        const float floor_h = this->logical_heigth;
-        bool flip_horizontal = false;
-
-        SDL_Log("INFO: SDL Application initiated and running");
-        bool running = true;
-
-        Uint64 frame_time_acc_ns = 0;
-        Uint32 fps = 0;
-
-        Uint64 prev_time_ms = SDL_GetTicks();
-
-        while (true) // Main game loop
-        {
-            Uint64 start_ns = SDL_GetTicksNS();
-
-            Uint64 now_time_ms = SDL_GetTicks(); // To calculate the player movement based on time
-
-            float delta_time_sec = (now_time_ms - prev_time_ms) / 1000.0f;
-
-            running = HandleIO();
-
-            if (!running) break;
-
-        // Update begin
-            const float move_delta = 100.0f;
-            float move_amount = 0;
-            if (keys[SDL_SCANCODE_A]) {
-                move_amount -= move_delta;
-                flip_horizontal = true;
-            }
-            if (keys[SDL_SCANCODE_D]) {
-                move_amount += move_delta;
-                flip_horizontal = false;
-            }
-            // Devide by delta time makes the movement base on time not on random values
-            // Without delta time it would only work on fixed and low fps
-            playerX += move_amount * delta_time_sec;
-        // Update end
-
-        // Render begin
-            // Make the buffer renderer
-            SDL_SetRenderDrawColor(this->renderer, 26, 27, 44, 255); // Toukyou Night #1a1b2c
-            SDL_RenderClear(this->renderer);
-
-            const float sprite_size = 32;
-            SDL_FRect src_rect  = {
-                .x = 0,
-                .y = 0,
-                .w = sprite_size,
-                .h = sprite_size
-            };
-            SDL_FRect dest_rect = {
-                .x = playerX,
-                .y = floor_h - sprite_size,
-                .w = sprite_size,
-                .h = sprite_size
-            };
-            // SDL_RenderTexture(this->renderer, this->idle_tex, &src_rect, &dest_rect);
-            SDL_RenderTextureRotated(this->renderer, this->idle_tex, &src_rect, &dest_rect, 0, nullptr,
-                    (flip_horizontal) ? SDL_FLIP_HORIZONTAL :  SDL_FLIP_NONE);
-
-            // Draws the processed buffer in the window
-            SDL_RenderPresent(this->renderer);
-        // Render end
-
-        // FPS / Frame Time begin
-            Uint64 frame_time_ns = SDL_GetTicksNS() - start_ns;
-
-            // Calculate the delay to limit it and keep a regular fps
-            if (frame_time_ns < DELAY_60FPS_NS) {
-                Uint64 delay_ns = DELAY_60FPS_NS - frame_time_ns;
-                SDL_DelayNS(delay_ns);
-            }
-
-            // Calculate fps based on frame time in ns
-            ++fps;
-            frame_time_acc_ns += DELAY_60FPS_NS;
-            if (frame_time_acc_ns >= ONE_SECOND_NS) {
-                SDL_Log("FPS: %d, Frame time: %zu nano seconds", fps, frame_time_ns);
-                // SDL_Log("Width: %d, Height: %d", this->width, this->height);
-                fps = 0;
-                frame_time_acc_ns = 0;
-            }
-        // FPS / Frame Time end
-
-            prev_time_ms = now_time_ms;
-        }
-
-        // Clean up assets
-        SDL_DestroyTexture(this->idle_tex);
-
-        SDL_Log("INFO: Quit event called. Quiting...");
-    }
+    SDL_Window *window;
+    SDL_Renderer *renderer;
 };
 
-int main(int argc, char **argv)
+bool init_state(SDLState *state)
 {
-    (void) argc;
-    (void) argv;
-    const std::unique_ptr<MyGame> app = std::make_unique<MyGame>();
-    if (!app->Init()) return 1;
-    app->Run();
+    if (!SDL_Init(SDL_INIT_VIDEO)) {
+        SDL_Log("ERROR: Could not init the SDL3 application: %s", SDL_GetError());
+        return false;
+    }
+
+    state->window = SDL_CreateWindow("My Game", state->window_width, state->window_height, SDL_WINDOW_RESIZABLE);
+    if (state->window == nullptr) {
+        SDL_Log("ERROR: Could not create a window: %s", SDL_GetError());
+    }
+
+    state->renderer = SDL_CreateRenderer(state->window, nullptr);
+    if (state->renderer == nullptr) {
+        SDL_Log("ERROR: Could not create a renderer: %s", SDL_GetError());
+        return false;
+    }
+
+    // Sizes the presentation independently of the size of the window
+    if (!SDL_SetRenderLogicalPresentation(state->renderer, state->logical_width, state->logical_height,
+                                          SDL_LOGICAL_PRESENTATION_LETTERBOX)) {
+        SDL_Log("ERROR: Could not set the logical presentation: %s", SDL_GetError());
+        return false;
+    }
+
+    return true;
+}
+
+void cleanup(SDLState *state)
+{
+    SDL_Log("INFO: Cleaning Up ...");
+    if (state->renderer) SDL_DestroyRenderer(state->renderer);
+    if (state->window) SDL_DestroyWindow(state->window);
+    SDL_Quit();
+}
+
+// struct Resources
+// {
+//     const int ANIMATION_PLAYER_IDLE = 0; // Represents the index animation in the player animations vector
+//     std::vector<Animation> playerAnimations;
+//     std::vector<SDL_Texture *> textures;
+//     SDL_Texture *texture_idle;
+
+//     SDL_Texture *load_texture(SDL_Renderer *renderer, const std::string &file_path)
+//     {
+//         SDL_Texture *texture = IMG_LoadTexture(renderer, file_path.c_str());
+//         SDL_SetTextureScaleMode(texture, SDL_SCALEMODE_NEAREST);
+//         this->textures.push_back(texture);
+//         return texture;
+//     }
+
+//     void load(SDLState *state)
+//     {
+//         this->playerAnimations.resize(5);
+//         this->playerAnimations[ANIMATION_PLAYER_IDLE] = Animation(8, 1.6f);
+//         this->texture_idle = this->load_texture(state->renderer, get_data_path_for("idle.png"));
+//     }
+
+//     void unload()
+//     {
+//         for (SDL_Texture *texture : this->textures) {
+//             SDL_DestroyTexture(texture);
+//         }
+//     }
+// };
+
+bool handle_events(SDLState *state)
+{
+    SDL_Event event = {};
+    while (SDL_PollEvent(&event)) {
+        switch (event.type) {
+        case SDL_EVENT_QUIT:
+            return false;
+        case SDL_EVENT_WINDOW_RESIZED:
+            state->width = event.window.data1;
+            state->height = event.window.data2;
+            break;
+        }
+    }
+    return true;
+}
+
+struct GameState
+{
+    const bool *keys;
+    float player_x;
+    bool flip_horizontal;
+
+    GameState(): keys(SDL_GetKeyboardState(nullptr)), player_x(150.0), flip_horizontal(false) {}
+};
+
+void update(GameState *game_state, Uint64 now_time_ms, Uint64 prev_time_ms)
+{
+        const float move_delta = 100.0f;
+        float move_amount = 0;
+
+        if (game_state->keys[SDL_SCANCODE_A]) {
+            move_amount -= move_delta;
+            game_state->flip_horizontal = true;
+        }
+
+        if (game_state->keys[SDL_SCANCODE_D]) {
+            move_amount += move_delta;
+            game_state->flip_horizontal = false;
+        }
+
+        // Devide by delta time makes the movement base on time not on random values
+        // Without delta time it would only work on fixed and low fps
+        const float delta_time_sec = (now_time_ms - prev_time_ms) / 1000.0f; // Divide by 1000 to convert to sec
+        game_state->player_x += move_amount * delta_time_sec;
+}
+
+int main()
+{
+    const std::unique_ptr<SDLState> state = std::make_unique<SDLState>();
+    if (!init_state(state.get())) {
+        SDL_Log("ERROR: Could not init SDLState");
+        return 1;
+    }
+
+    const std::unique_ptr<GameState> game_state = std::make_unique<GameState>();
+
+    // Loag game assets
+    SDL_Texture *idle_tex = IMG_LoadTexture(state->renderer, get_data_path_for("idle.png").c_str());
+    if (idle_tex == nullptr) {
+        SDL_Log("ERROR: Could not load texture: %s", SDL_GetError());
+        return 1;
+    }
+    SDL_SetTextureScaleMode(idle_tex, SDL_SCALEMODE_NEAREST);
+
+    // The y coordinate of the game floor
+    const float floor_h = state->logical_height;
+
+    // Reference to calculate delta_time to use on game controls
+    Uint64 prev_time_ms = SDL_GetTicks();
+
+    // Main loop
+    while (true) {
+        const Uint64 now_time_ms = SDL_GetTicks();
+
+        // Handle events
+        const bool is_running = handle_events(state.get());
+        if (!is_running) break;
+
+        // Update
+        update(game_state.get(), now_time_ms, prev_time_ms);
+
+        SDL_SetRenderDrawColor(state->renderer, 26, 27, 44, 255); // Toukyou Night #1a1b2c
+        SDL_RenderClear(state->renderer);
+
+        const float sprite_size = 32;
+        SDL_FRect src_rect = {
+            .x = 0,
+            .y = 0,
+            .w = sprite_size,
+            .h = sprite_size,
+        };
+        SDL_FRect dest_rect = {
+            .x = game_state->player_x,
+            .y = floor_h - sprite_size,
+            .w = sprite_size,
+            .h = sprite_size,
+        };
+        SDL_RenderTextureRotated(state->renderer, idle_tex, &src_rect, &dest_rect, 0, nullptr,
+                                 (game_state->flip_horizontal) ? SDL_FLIP_HORIZONTAL : SDL_FLIP_NONE);
+
+        SDL_RenderPresent(state->renderer); // Draws the processed buffer in the window
+
+        SDL_Delay(16); // TODO: Calc the delay
+
+        prev_time_ms = now_time_ms;
+    }
+
+    SDL_DestroyTexture(idle_tex);
+
+    cleanup(state.get());
+
     return 0;
 }
