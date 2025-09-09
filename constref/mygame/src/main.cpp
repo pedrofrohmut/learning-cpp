@@ -2,10 +2,11 @@
 #include <SDL3_image/SDL_image.h>
 
 #include <memory>
-// #include <vector>
+#include <string>
+#include <vector>
 
 #include "SDL_keyboard.h"
-// #include "animation.h"
+#include "animation.h"
 
 // Global Constants
 // const Uint64 ONE_SECOND_MS = 1000;
@@ -66,35 +67,35 @@ void cleanup(SDLState *state)
     SDL_Quit();
 }
 
-// struct Resources
-// {
-//     const int ANIMATION_PLAYER_IDLE = 0; // Represents the index animation in the player animations vector
-//     std::vector<Animation> playerAnimations;
-//     std::vector<SDL_Texture *> textures;
-//     SDL_Texture *texture_idle;
+struct Resources
+{
+    const int ANIMATION_PLAYER_IDLE = 0; // Represents the index animation in the player animations vector
+    std::vector<Animation> playerAnimations;
+    std::vector<SDL_Texture *> textures;
+    SDL_Texture *texture_idle;
 
-//     SDL_Texture *load_texture(SDL_Renderer *renderer, const std::string &file_path)
-//     {
-//         SDL_Texture *texture = IMG_LoadTexture(renderer, file_path.c_str());
-//         SDL_SetTextureScaleMode(texture, SDL_SCALEMODE_NEAREST);
-//         this->textures.push_back(texture);
-//         return texture;
-//     }
+    SDL_Texture *load_texture(SDL_Renderer *renderer, const std::string &file_path)
+    {
+        SDL_Texture *texture = IMG_LoadTexture(renderer, file_path.c_str());
+        SDL_SetTextureScaleMode(texture, SDL_SCALEMODE_NEAREST);
+        this->textures.push_back(texture);
+        return texture;
+    }
 
-//     void load(SDLState *state)
-//     {
-//         this->playerAnimations.resize(5);
-//         this->playerAnimations[ANIMATION_PLAYER_IDLE] = Animation(8, 1.6f);
-//         this->texture_idle = this->load_texture(state->renderer, get_data_path_for("idle.png"));
-//     }
+    void load(SDLState *state)
+    {
+        this->playerAnimations.resize(5);
+        this->playerAnimations[ANIMATION_PLAYER_IDLE] = Animation(8, 1.6f);
+        this->texture_idle = this->load_texture(state->renderer, get_data_path_for("idle.png"));
+    }
 
-//     void unload()
-//     {
-//         for (SDL_Texture *texture : this->textures) {
-//             SDL_DestroyTexture(texture);
-//         }
-//     }
-// };
+    void unload()
+    {
+        for (SDL_Texture *texture : this->textures) {
+            SDL_DestroyTexture(texture);
+        }
+    }
+};
 
 bool handle_events(SDLState *state)
 {
@@ -152,13 +153,9 @@ int main()
 
     const std::unique_ptr<GameState> game_state = std::make_unique<GameState>();
 
-    // Loag game assets
-    SDL_Texture *idle_tex = IMG_LoadTexture(state->renderer, get_data_path_for("idle.png").c_str());
-    if (idle_tex == nullptr) {
-        SDL_Log("ERROR: Could not load texture: %s", SDL_GetError());
-        return 1;
-    }
-    SDL_SetTextureScaleMode(idle_tex, SDL_SCALEMODE_NEAREST);
+    // Load game assets
+    Resources resources;
+    resources.load(state.get());
 
     // The y coordinate of the game floor
     const float floor_h = state->logical_height;
@@ -193,7 +190,7 @@ int main()
             .w = sprite_size,
             .h = sprite_size,
         };
-        SDL_RenderTextureRotated(state->renderer, idle_tex, &src_rect, &dest_rect, 0, nullptr,
+        SDL_RenderTextureRotated(state->renderer, resources.texture_idle, &src_rect, &dest_rect, 0, nullptr,
                                  (game_state->flip_horizontal) ? SDL_FLIP_HORIZONTAL : SDL_FLIP_NONE);
 
         SDL_RenderPresent(state->renderer); // Draws the processed buffer in the window
@@ -203,8 +200,7 @@ int main()
         prev_time_ms = now_time_ms;
     }
 
-    SDL_DestroyTexture(idle_tex);
-
+    resources.unload();
     cleanup(state.get());
 
     return 0;

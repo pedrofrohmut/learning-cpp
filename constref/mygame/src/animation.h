@@ -4,13 +4,13 @@
 
 class Animation
 {
-    Timer timer;
     int frame_count;
+    Timer timer;
 
 public:
-    Animation(): timer(0), frame_count(0) {}
+    Animation() : frame_count(0), timer(0) {}
 
-    Animation(int frame_count, float length): timer(length), frame_count(frame_count) {}
+    Animation(int frame_count, float length) : frame_count(frame_count), timer(length) {}
 
     float get_length() const
     {

@@ -1,5 +1,7 @@
 #pragma once
 
+// Class for timing and time tracking utilities
+
 class Timer
 {
     float length, time;
